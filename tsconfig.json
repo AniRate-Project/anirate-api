@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "target": "ES2015",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noImplicitReturns": false,
+    "baseUrl": "./",
+    "paths": {
+      "@database": ["src/database/index.ts"],
+      "@db": ["src/database/index.ts"],
+      "@database/*": ["src/database/*"],
+      "@entities": ["src/database/entities/index.ts"],
+      "@entities/*": ["src/database/entities/*"],
+      "@services/*": ["src/services/*"],
+      "@controllers": ["src/controllers/index.ts"],
+      "@controllers/*": ["src/controllers/*"],
+      "@middlewares/*": ["src/middlewares/*"],
+      "@core/*": ["src/core/*"],
+      "@errors": ["src/core/errors/index.ts"],
+      "@errors/*": ["src/core/errors/*"],
+      "@log": ["src/logger.ts"]
+    }
+  },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  }
+}
