@@ -1,18 +1,24 @@
 {
+  "engines": {
+    "node": "16.x",
+    "yarn": "1.x",
+    "npm": "7.x"
+  },
   "scripts": {
     "env:dev": "cross-env-shell NODE_ENV=development",
     "env:prod": "cross-env-shell NODE_ENV=production",
-    "build": "tsc",
+    "build": "npx --package=typescript tsc",
     "run:dev": "ts-node --files ./src/index.ts",
-    "run:prod": "node -r module-alias/register ./dist/index.js",
+    "run:prod": "node ./dist/index.js",
     "script:populate:dev": "ts-node --files ./src/scripts/populate.ts",
-    "script:populate:prod": "node -r module-alias/register ./dist/scripts/populate.js",
+    "script:populate:prod": "node ./dist/scripts/populate.js",
     "populate:dev": "npm-run-all env:dev script:populate:dev",
     "populate:prod": "npm-run-all env:prod build script:populate:prod",
     "populate": "npm run populate:prod",
     "start:dev": "npm-run-all env:dev run:dev",
     "start:prod": "npm-run-all env:prod build run:prod",
-    "start": "npm run start:prod"
+    "start": "npm run start:prod",
+    "heroku-postbuild": "npm-run-all env:prod build"
   },
   "dependencies": {
     "@ostai/cacheman-redis": "^2.0.2",
@@ -25,6 +31,7 @@
     "express": "^4.17.1",
     "express-validator": "^6.12.1",
     "ioredis": "^4.27.9",
+    "module-alias": "^2.2.2",
     "mongodb": "^4.1.2",
     "mongoose": "^6.0.8",
     "node-schedule": "^2.0.0",
@@ -37,7 +44,6 @@
     "@types/express": "^4.17.13",
     "@types/node": "^16.9.4",
     "@types/node-schedule": "^1.3.2",
-    "module-alias": "^2.2.2",
     "ts-node": "^10.2.1",
     "tsconfig-paths": "^3.11.0",
     "typescript": "^4.4.3"

@@ -1,3 +1,6 @@
+/* Initialize module-alias */
+import 'module-alias/register';
+
 /* Initialize env variables */
 import 'dotenv/config';
 
