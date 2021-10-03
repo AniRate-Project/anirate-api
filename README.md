@@ -30,7 +30,7 @@ Remember to be kind and that this project is not the only thing we have to work 
 
 ## Credits and License
 
-This project was brought to life thanks to [@Mazino](https://github.com/PizzaPiee)'s idea and the API (until now) is entirely written by [@DanielVip3](https://github.com/DanielVip3).
+This project was brought to life thanks to [@Mazino](https://github.com/PizzaPiee)'s idea and the API (as of today) is entirely written by [@DanielVip3](https://github.com/DanielVip3).
 Any contributor will subsequently be listed in this section.
 
 This project is distributed under the new BSD License (3-clause).
