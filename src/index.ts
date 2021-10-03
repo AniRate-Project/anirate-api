@@ -1,4 +1,4 @@
-import '@src/imports';
+import './imports';
 
 /* Import database */
 import Database from '@db';

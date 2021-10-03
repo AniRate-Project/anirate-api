@@ -1,4 +1,4 @@
-import '@src/imports';
+import '../imports';
 
 /* Import logger */
 import logger from "@log";

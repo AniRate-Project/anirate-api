@@ -57,7 +57,6 @@
     "@middlewares": "dist/middlewares",
     "@core": "dist/core",
     "@errors": "dist/core/errors",
-    "@log": "dist/logger.js",
-    "@src": "dist"
+    "@log": "dist/logger.js"
   }
 }

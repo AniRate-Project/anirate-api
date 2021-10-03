@@ -6,7 +6,7 @@ import { NotFoundError, AlreadyDoneError, NotDoneError } from "@errors";
 
 export class AnimeService {
   static async getAnime(id: string): Promise<AnimeType> {
-    const anime = await Anime.findById(id).cache(3600, `anime.${id}`).exec();
+    const anime = await Anime.hydrate(await Anime.findById(id).lean().cache(3600, `anime.${id}`).exec());
 
     if (anime) return anime;
     else throw new NotFoundError("No anime was found using the provided id.", "NO_ANIME", {

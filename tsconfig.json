@@ -24,8 +24,7 @@
       "@core/*": ["src/core/*"],
       "@errors": ["src/core/errors/index.ts"],
       "@errors/*": ["src/core/errors/*"],
-      "@log": ["src/logger.ts"],
-      "@src/*": ["src/*"]
+      "@log": ["src/logger.ts"]
     }
   },
   "ts-node": {
