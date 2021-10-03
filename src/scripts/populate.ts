@@ -1,5 +1,4 @@
-/* Initialize env variables */
-import 'dotenv/config';
+import '@src/imports';
 
 /* Import logger */
 import logger from "@log";

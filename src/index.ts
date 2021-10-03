@@ -1,8 +1,4 @@
-/* Initialize module-alias */
-import 'module-alias/register';
-
-/* Initialize env variables */
-import 'dotenv/config';
+import '@src/imports';
 
 /* Import database */
 import Database from '@db';
