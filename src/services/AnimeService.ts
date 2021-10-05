@@ -6,9 +6,13 @@ import { NotFoundError, AlreadyDoneError, NotDoneError } from "@errors";
 
 export class AnimeService {
   static async getAnime(id: string): Promise<AnimeType> {
-    const anime = await Anime.hydrate(await Anime.findById(id).lean().cache(3600, `anime.${id}`).exec());
+    const cachedAnime = await Anime.findById(id).lean().cache(3600, `anime.${id}`).exec();
 
-    if (anime) return anime;
+    /*
+    * We need to hydrate it because, for some reason,
+    * recachegoose returns a POJO instead of an hydrated object.
+    */
+    if (cachedAnime) return await Anime.hydrate(cachedAnime);
     else throw new NotFoundError("No anime was found using the provided id.", "NO_ANIME", {
       anime: id,
     });
