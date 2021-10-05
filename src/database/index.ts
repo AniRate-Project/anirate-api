@@ -3,7 +3,7 @@ import cachegoose from "recachegoose";
 import CachemanRedis from "@ostai/cacheman-redis";
 import Redis from "ioredis";
 
-import isProdEnv from "@core/isProdEnv";
+import isProdEnv from "@utils/isProdEnv";
 
 export class Database {
   connected: boolean = false;

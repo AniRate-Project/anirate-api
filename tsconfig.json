@@ -24,6 +24,7 @@
       "@core/*": ["src/core/*"],
       "@errors": ["src/core/errors/index.ts"],
       "@errors/*": ["src/core/errors/*"],
+      "@utils/*": ["src/utils/*"],
       "@log": ["src/logger.ts"]
     }
   },

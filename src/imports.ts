@@ -1,5 +1,7 @@
-/* Initialize module-alias, except in dev mode */
-if (process.env.NODE_ENV !== 'development') {
+import isProdEnv from './utils/isProdEnv';
+
+/* Initialize module-alias, except in dev mode because we already have TS compiler's paths */
+if (isProdEnv()) {
   require('module-alias/register');
 }
 
