@@ -1,18 +1,25 @@
+import { mongoose } from "@typegoose/typegoose";
+
 import { Anime, AnimeType } from "@entities/Anime";
 import { RateableEpisode } from "@entities/RateableEpisode";
 import { Rating } from "@entities/Rating";
 
 import { NotFoundError, AlreadyDoneError, NotDoneError } from "@errors";
+import animeStructureAggregationPipeline from "@utils/animeStructureAggregationPipeline";
 
 export class AnimeService {
-  static async getAnime(id: string): Promise<AnimeType> {
-    const cachedAnime = await Anime.findById(id).lean().cache(3600, `anime.${id}`).exec();
+  static async getAnime(id: string, userId?: string): Promise<AnimeType> {
+    /*
+    * cachedAnime here is an array, because aggregate only returns arrays, even if of a single element.
+    * Also, we need to cast the aggregation to any because recachegoose doesn't support TypeScript.
+    */
+    const cachedAnime = await (Anime.aggregate().match({ _id: new mongoose.Types.ObjectId(id) }).append(animeStructureAggregationPipeline(userId)) as any).cache(3600, `anime.${id}`).exec();
 
     /*
     * We need to hydrate it because, for some reason,
     * recachegoose returns a POJO instead of an hydrated object.
     */
-    if (cachedAnime) return await Anime.hydrate(cachedAnime);
+    if (cachedAnime && cachedAnime[0]) return await Anime.hydrate(cachedAnime[0]);
     else throw new NotFoundError("No anime was found using the provided id.", "NO_ANIME", {
       anime: id,
     });
@@ -29,7 +36,7 @@ export class AnimeService {
   }
 
   static async voteEpisode(animeId: string, episodeId: string, userId: string, score: number): Promise<Object> {
-    const anime = await this.getAnime(animeId);
+    const anime = await this.getAnime(animeId, userId);
     const episode = await this.getEpisode(anime, episodeId);
 
     const userRatingIndex: number = episode.ratings.findIndex(r => r.user === userId);
@@ -48,12 +55,13 @@ export class AnimeService {
     
     return {
       user: userId,
-      score: score
+      score: score,
+      anime: anime
     };
   }
 
   static async follow(animeId: string, userId: string, follow: boolean = true): Promise<Object> {
-    const anime = await this.getAnime(animeId);
+    const anime = await this.getAnime(animeId, userId);
 
     const userFollowIndex: number = anime.followers.findIndex(u => u === userId);
     if (userFollowIndex > -1) {
@@ -75,7 +83,7 @@ export class AnimeService {
     return {
       user: userId,
       following: follow,
-      title: anime.title,
+      anime: anime
     };
   }
 
@@ -107,129 +115,8 @@ export class AnimeService {
         $limit: 5,
       },
 
-      /* Creating the result object. */
-      {
-        $project: {
-          anilistId: 1,
-          title: 1,
-          extraTitles: 1,
-          episodes: {
-            $map: {
-              input: "$episodes",
-              as: "episode",
-              in: {
-                episode: "$$episode.episode",
-                /* The number of votes of this episode: count(v1, v2, ..., vn).  */
-                countScore: {
-                  $size: "$$episode.ratings"
-                },
-                /* The average score of this episode: (v1 + v2 + ... + vn) / (countScore). */
-                avgScore: {
-                  $avg: "$$episode.ratings.score"
-                },
-                /* The sum of all the scores of this episode: (v1 + v2 + ... + vn). */
-                sumScore: {
-                  $sum: "$$episode.ratings.score",
-                },
-                /* The requesting user's score for this episode, as a Rating object, including user's id, score and date. */
-                userScore: {
-                  $ifNull: [ // ifnull return null. For some reason $first does not return anything if its array is empty ([]). I want it to return null if the array is empty.
-                    {
-                      $first: { // using first because filter returns an array, even if we filter for a single element
-                        $filter: {
-                          input: "$$episode.ratings",
-                          as: "rating",
-                          cond: {
-                            $eq: ["$$rating.user", userId]
-                          } 
-                        } 
-                      }
-                    },
-                    null
-                  ],
-                }
-              }
-            }
-          },
-
-          /* A score object for the anime itself which contains some score info for the entire anime. */
-          score: {
-            /*
-            * The number of votes of this anime: (episode1.countScore + episode2.countScore + ... + episodeN.countScore),
-            * but calculated not by using the countScore property but manually summing episode ratings arrays sizes.
-            */
-            countScore: {
-              $sum: { 
-                $map: {
-                  input: "$episodes",
-                  as: "episode",
-                  in: {
-                    $size: "$$episode.ratings"
-                  }
-                }
-              }
-            },
-          },
-
-          /* A follow object which contains some follow info for the entire anime. */
-          follow: {
-            /* The number of followers of this anime (followers array size). */
-            followersCount: {
-              $size: "$followers"
-            },
-            /* A boolean, meaning if the requesting user currently follows the anime (looking if his ID is in the followers array). */
-            userFollowing: {
-              $in: [userId, "$followers"]
-            },
-          },
-
-          /* MongoDB Atlas search's searchHighlights results to use later to find the best matching title between title and extraTitles. */
-          bestTitles: {
-            $meta: "searchHighlights"
-          },
-        }
-      },
-
-      /* Adding a new field after the projection because we need to use the projection's calculated fields. */
-      {
-        $addFields: {
-          /*
-          * The average score for this anime, calculated using a weighted average and not an average of multiple averages.
-          * For instance, it is not done using (avg1 + avg2 + ... + avgn) / (num of avgs);
-          * instead, it sums all the scores for each episode and divides it by the sum of the number of votes of each episode,
-          * like this: (ep1sum + ep2sum + ... + epnsum) / (ep1count + ep2count + ... + epncount).
-          * We use $cond to be sure that we don't divide by zero, thus returning 0 and not getting an error.
-          */
-          "score.avgScore": {
-            $cond: [
-              {
-                $eq: [
-                  { $sum: "$episodes.countScore" },
-                  0
-                ]
-              },
-              0,
-              {
-                $divide: [
-                  { $sum: "$episodes.sumScore" },
-                  { $sum: "$episodes.countScore" }
-                ]
-              }
-            ]
-          },
-
-          /*
-          * User's average score for this anime, calculated using an average for all his votes for each episode where present.
-          * If the user never voted any episode, it'll be null.
-          */
-          "score.userScore": {
-            $ifNull: [
-              { $avg: "$episodes.userScore.score" },
-              0
-            ]
-          }
-        },
-      },
+      /* Formatting animes following the common structure */
+      ...animeStructureAggregationPipeline(userId, true)
     ]).exec();
 
     /* Telling, for each anime, the title most matching the search query to display to the user. */

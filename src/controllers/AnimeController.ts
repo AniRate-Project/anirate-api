@@ -94,13 +94,15 @@ export class AnimeController {
     ValidationMiddleware([
       param('anime').not().isEmpty().withMessage("must not be empty").isString().withMessage("must be a string"),
       param('field').optional({ nullable: true, checkFalsy: true }).isString().withMessage("must be a string"),
+      query('user').optional({ nullable: true, checkFalsy: true }).isString().withMessage("must be a string").matches(/\d/).withMessage("must be a Discord User ID"),
     ])
   ])
   async get(req: Request, res: Response) {
     const { anime, field } = req.params;
+    const { user } = req.query;
 
     try {
-      const animeObject = await AnimeService.getAnime(anime);
+      const animeObject = await AnimeService.getAnime(anime, user ? user.toString() : undefined);
 
       /* We can't use hasOwnProperty here, because it's not a POJO but most likely a Mongoose getter. */
       if (field && field in animeObject) return new ResponseSuccess(200, animeObject[field]).respond(res);
