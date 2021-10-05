@@ -88,6 +88,28 @@ export class AnimeController {
     }
   }
 
+  @Get(':anime/:field?')
+  @Middleware([
+    AuthorizationMiddleware(Role.BOT),
+    ValidationMiddleware([
+      param('anime').not().isEmpty().withMessage("must not be empty").isString().withMessage("must be a string"),
+      param('field').optional({ nullable: true, checkFalsy: true }).isString().withMessage("must be a string"),
+    ])
+  ])
+  async get(req: Request, res: Response) {
+    const { anime, field } = req.params;
+
+    try {
+      const animeObject = await AnimeService.getAnime(anime);
+
+      /* We can't use hasOwnProperty here, because it's not a POJO but most likely a Mongoose getter. */
+      if (field && field in animeObject) return new ResponseSuccess(200, animeObject[field]).respond(res);
+      else return new ResponseSuccess(200, animeObject).respond(res);
+    } catch(err) {
+      this.handleError(err, res);
+    }
+  }
+
   @Get('search')
   @Middleware([
     AuthorizationMiddleware(Role.BOT),
