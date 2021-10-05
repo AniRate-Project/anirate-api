@@ -12,13 +12,13 @@
     "run:prod": "node ./dist/index.js",
     "script:populate:dev": "ts-node --files ./src/scripts/populate.ts",
     "script:populate:prod": "node ./dist/scripts/populate.js",
-    "populate:dev": "npm-run-all env:dev script:populate:dev",
-    "populate:prod": "npm-run-all env:prod build script:populate:prod",
+    "populate:dev": "cross-env npm run env:dev npm-run-all script:populate:dev",
+    "populate:prod": "cross-env npm run env:prod npm-run-all build script:populate:prod",
     "populate": "npm run populate:prod",
-    "start:dev": "npm-run-all env:dev run:dev",
-    "start:prod": "npm-run-all env:prod build run:prod",
+    "start:dev": "cross-env npm run env:dev npm-run-all run:dev",
+    "start:prod": "cross-env npm run env:prod npm-run-all build run:prod",
     "start": "npm run start:prod",
-    "heroku-postbuild": "npm-run-all env:prod build"
+    "heroku-postbuild": "cross-env npm run env:prod npm-run-all build"
   },
   "dependencies": {
     "@ostai/cacheman-redis": "^2.0.2",
