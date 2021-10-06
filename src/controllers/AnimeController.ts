@@ -88,30 +88,6 @@ export class AnimeController {
     }
   }
 
-  @Get(':anime/:field?')
-  @Middleware([
-    AuthorizationMiddleware(Role.BOT),
-    ValidationMiddleware([
-      param('anime').not().isEmpty().withMessage("must not be empty").isString().withMessage("must be a string"),
-      param('field').optional({ nullable: true, checkFalsy: true }).isString().withMessage("must be a string"),
-      query('user').optional({ nullable: true, checkFalsy: true }).isString().withMessage("must be a string").matches(/\d/).withMessage("must be a Discord User ID"),
-    ])
-  ])
-  async get(req: Request, res: Response) {
-    const { anime, field } = req.params;
-    const { user } = req.query;
-
-    try {
-      const animeObject = await AnimeService.getAnime(anime, user ? user.toString() : undefined);
-
-      /* We can't use hasOwnProperty here, because it's not a POJO but most likely a Mongoose getter. */
-      if (field && field in animeObject) return new ResponseSuccess(200, animeObject[field]).respond(res);
-      else return new ResponseSuccess(200, animeObject).respond(res);
-    } catch(err) {
-      this.handleError(err, res);
-    }
-  }
-
   @Get('search')
   @Middleware([
     AuthorizationMiddleware(Role.BOT),
@@ -133,6 +109,30 @@ export class AnimeController {
       const searchResponse: Object = await AnimeService.search(query as string, user as string);
 
       return new ResponseSuccess(200, searchResponse).respond(res);
+    } catch(err) {
+      this.handleError(err, res);
+    }
+  }
+
+  @Get(':anime/:field?')
+  @Middleware([
+    AuthorizationMiddleware(Role.BOT),
+    ValidationMiddleware([
+      param('anime').not().isEmpty().withMessage("must not be empty").isString().withMessage("must be a string"),
+      param('field').optional({ nullable: true, checkFalsy: true }).isString().withMessage("must be a string"),
+      query('user').optional({ nullable: true, checkFalsy: true }).isString().withMessage("must be a string").matches(/\d/).withMessage("must be a Discord User ID"),
+    ])
+  ])
+  async get(req: Request, res: Response) {
+    const { anime, field } = req.params;
+    const { user } = req.query;
+
+    try {
+      const animeObject = await AnimeService.getAnime(anime, user ? user.toString() : undefined);
+
+      /* We can't use hasOwnProperty here, because it's not a POJO but most likely a Mongoose getter. */
+      if (field && field in animeObject) return new ResponseSuccess(200, animeObject[field]).respond(res);
+      else return new ResponseSuccess(200, animeObject).respond(res);
     } catch(err) {
       this.handleError(err, res);
     }
