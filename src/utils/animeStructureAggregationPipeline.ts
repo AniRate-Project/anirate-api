@@ -8,6 +8,14 @@ export default function animeStructureAggregationPipeline(userId?: string, isSea
     :
     {}
   );
+  
+  const ratings = (!isSearch ?
+    {
+      ratings: "$$episode.ratings",
+    }
+    :
+    {}
+  );
 
   return [
     /* Creating the result object. */
@@ -22,6 +30,7 @@ export default function animeStructureAggregationPipeline(userId?: string, isSea
             as: "episode",
             in: {
               episode: "$$episode.episode",
+              ...ratings,
               /* The number of votes of this episode: count(v1, v2, ..., vn).  */
               countScore: {
                 $size: "$$episode.ratings"
